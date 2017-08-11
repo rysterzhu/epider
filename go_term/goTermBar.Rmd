@@ -1,0 +1,101 @@
+---
+title: "goTermBar"
+author: "zhu"
+date: "2017年5月2日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(reshape2)
+```
+
+```{r}
+raw <- read.table("constantly_up_DOWN.txt",sep = "\t",header = T)
+
+data <- raw[1:8,c("Term","PValue")]
+data$PValue <- -log10(data$PValue)
+rownames(data) <- data$Term
+
+# test <- melt(data)
+
+g = ggplot(data) 
+
+
+g2 = (g+ geom_bar(aes(x=reorder(Term,PValue),weight=PValue),fill="darkolivegreen3",position = position_stack(reverse = F),width = 0.4,show.legend = F) 
+      + coord_flip() + xlab("") + ylab("-lg(pvalue)") + theme_bw() + labs(title = "Constantly Upregulated genes Enriched Biological Process")+
+        theme(panel.grid.major =element_blank(), 
+              panel.grid.minor = element_blank(),
+              panel.background = element_blank(),
+              #plot.title = element_text(hjust = 4),
+              axis.text.y = element_text(colour = "black",size = 10),
+              plot.margin = margin(10,10,5,5)
+              ) 
+      + scale_y_continuous(limits = c(0,10),expand=c(0,0))
+      #+ guides(fill = F) 
+    )
+print(g2)
+ggsave("BP_up1.pdf",g2,width = 9.60,height = 4.80)
+```
+
+
+
+
+
+```{r}
+raw <- read.table("~/R/epider/chart_KEGG_down.txt",sep = "\t",header = T)
+
+data <- raw[1:9,c("Term","PValue")]
+data$PValue <- -log10(data$PValue)
+rownames(data) <- data$Term
+
+g2 = (ggplot(data) 
+  +	geom_bar(aes(x=reorder(Term,PValue),weight=PValue),  #将term按pvalue排序；bar的高度为term*weight
+	fill="OliveDrab3",  							#bar填充的颜色
+	position = position_stack(reverse = F),	    		#未知
+	width = 0.4,										#bar的宽度
+	show.legend = F)									#不显示legend
+  + coord_flip() 										#倒置坐标轴
+	+ xlab("") + ylab("-lg(pvalue)") 					#x,y坐标轴标题
+	+ theme_bw() 										#空白主题
+	+ labs(title = "Constantly Downregulated Genes Enriched KEGG Pathway")   #图标题
+	+ theme(panel.grid.major =element_blank(), 						
+              panel.grid.minor = element_blank(),
+              panel.background = element_blank(),						#空白背景
+              #plot.title = element_text(hjust = 4),					#调整标题位置
+              axis.text.y = element_text(colour = "black",size = 10),	#y轴文字颜色大小
+              plot.margin = margin(10,10,5,5)							#图与边界的空白
+              ) 
+  + scale_y_continuous(limits = c(0,13),expand=c(0,0))				#y轴范围；与x轴的留白为0
+      #+ guides(fill = F) 
+    )
+print(g2)
+ggsave("KEGG_down1.pdf",g2,width = 9.60,height = 4.80)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

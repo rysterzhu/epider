@@ -1,0 +1,8 @@
+"0","select <- constant_up2[1:100,1]"
+"0","data <- assay(rld)[select,]"
+"0","data2 <- data.frame(""0d""=rowMeans(data[,colData(dds)$treated==""case1""]),"
+"0","                   ""90d""=rowMeans(data[,colData(dds)$treated==""case2""]),"
+"0","                    ""120d""=rowMeans(data[,colData(dds)$treated==""case3""]),"
+"0","                    control=rowMeans(data[,colData(dds)$treated==""control""]),check.names = F"
+"0","                    )"
+"0","pheatmap(data2, cluster_rows=T, show_rownames=T,cluster_cols=F,cellwidth = 20,cellheight = 10,filename = ""sortScoredFC_up1.pdf"")"

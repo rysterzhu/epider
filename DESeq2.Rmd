@@ -1,0 +1,271 @@
+---
+title: "WGCNA"
+author: "zhu"
+date: "2017年4月21日"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r install library, message=FALSE, warning=FALSE}
+# source("http://bioconductor.org/biocLite.R") 
+# biocLite(c("AnnotationDbi", "impute", "GO.db", "preprocessCore")) 
+# install.packages("WGCNA")
+#suppressMessages(library(WGCNA))
+library(DESeq2)
+library(RColorBrewer)
+library(ggplot2)
+library(pheatmap)
+library(sva)
+library(reshape2)
+load(".RData")
+save.image(".RData")
+```
+
+```{r Input data}
+directory <- "/home/qszhu/workspace/3.epidermal/3.DESeq2/1.htseq"
+sampleFiles <- grep("^.*.txt",list.files(directory),value=TRUE)
+
+sampleCondition <- sub(".txt","",sampleFiles)
+print(sampleCondition)
+Treated <- factor(substr(sampleCondition,1,1),labels = c("case1","case2","case3","control"))
+Rep = factor(substr(sampleCondition,2,2),labels = c("rep1","rep2","rep3"))
+sampleCondition = paste0(Treated,"_",Rep)
+#Sample = factor(substr(sampleCondition,1,1),labels = c("MYCN","FACT"))
+
+sampleTable <- data.frame(sampleName = sampleCondition,fileName = sampleFiles,treated = Treated,rep = Rep)
+#sampleTable$treated <- relevel(sampleTable$treated,"control")
+ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,directory = directory,design= ~ treated+rep)
+
+print(sampleCondition)
+``` 
+
+```{r}
+results <- list(
+res1 = results(dds,contrast = c("treated","case1","case2")),
+res2 = results(dds,contrast = c("treated","case2","case3")),
+res3 = results(dds,contrast = c("treated","case3","control")))
+
+data2
+```
+
+
+```{r results}
+nrow(ddsHTSeq)
+ddsHTSeq2 <- ddsHTSeq[ rowSums(counts(ddsHTSeq)) > 1, ]
+nrow(ddsHTSeq2)
+dds <- DESeq(ddsHTSeq2)
+#去除0counts的基因后有一点点变化
+
+colData(dds)
+results <- list(
+res1 = results(dds,contrast = c("treated","case1","control")),
+res2 = results(dds,contrast = c("treated","case2","control")),
+res3 = results(dds,contrast = c("treated","case3","control"))
+)
+# results <- list(
+# res1 = results(dds,contrast = c("treated","case1","control"),alpha=0.05,lfcThreshold=1),
+# res2 = results(dds,contrast = c("treated","case2","control"),alpha=0.05,lfcThreshold=1),
+# res3 = results(dds,contrast = c("treated","case3","control"),alpha=0.05,lfcThreshold=1))
+# res$padj <- res$pvalue
+# summary(res)
+#head(counts(ddsHTSeq,normalized=TRUE))
+```
+
+```{r}
+head(assay(rlog(ddsHTSeq, blind=T)), 3)
+head(assay(rlog(dds, blind=T)), 3)   #一样的
+```
+
+
+```{r count DE number}
+for(res in results){
+  #summary(res)
+print(length(which(res$log2FoldChange < -log2(2) & res$padj < 0.05)))
+print(length(which(res$log2FoldChange > log2(2) & res$padj < 0.05)))
+}
+
+
+# length(which(res$log2FoldChange < -log2(1.5) & res$pvalue < 0.05))
+# length(which(res$log2FoldChange > log2(1.5) & res$pvalue < 0.05))
+# length(which(res$log2FoldChange < -log2(1.5) & res$padj < 0.05))
+# length(which(res$log2FoldChange > log2(1.5) & res$padj < 0.05))
+# length(which(res$log2FoldChange < -log2(1.5) & res$padj < 0.1))
+# length(which(res$log2FoldChange > log2(1.5) & res$padj < 0.1))
+# length(which(res$padj < 0.1))
+# length(which(res$padj < 0.1))
+# length(which(res$padj > 0.05))
+res_frames = list()
+for(res in names(results)){
+res_frame <- as.data.frame(results[[res]])
+res_frame <- res_frame[which(!is.na(res_frame$padj)),]
+
+res_frame$change <- as.factor(ifelse(res_frame$padj < 0.05 & abs(res_frame$log2FoldChange) >= log2(2),
+                               ifelse(res_frame$log2FoldChange > 0, "UP", "DOWN"), "NOT"))
+res_frames[[res]] = res_frame
+print(length(which(res_frame$change=="DOWN")))
+print(length(which(res_frame$change=="UP")))
+}
+
+```
+
+
+```{r volcano plot}
+#with(res_frame, plot(log2FoldChange, -log10(padj), pch=20, main="Volcano plot"))
+for(res_frame in res_frames){
+g = ggplot(data=res_frame, aes(x=log2FoldChange, y=-log10(padj), color=change)) +
+  geom_point(alpha=0.5, size=1,na.rm = T) +
+  theme_set(theme_set(theme_bw(base_size=20)))+
+  xlab("log2 fold change") + ylab("-log10 padj-value") +
+  #ggtitle( this_tile  ) + theme(plot.title = element_text(size=15,hjust = 0.5))+
+  scale_colour_manual(values = c('darkgreen','grey','red'))  ## corresponding to the levels(res$change)
+#print(g)
+spe_genes <- select#  c("ABCA12","LCE1A","SPRR1A","KRT16")
+spe_frame <- res_frame[spe_genes,]
+spe_frame$name <- as.factor(rownames(spe_frame))
+
+g2 <- g + 
+  geom_point(aes(x=log2FoldChange, y=-log10(padj)), data = spe_frame, color="yellow")+
+  geom_text(aes(x=log2FoldChange, y=-log10(padj),label=name,vjust=-1,hjust=-0.1), data = spe_frame,color="black")
+
+print(g2)
+}
+```
+
+
+
+
+```{r write results}
+for(res in names(res_frames)){
+  res_frame=res_frames[[res]]
+write.table(res_frame[order(res_frame$log2FoldChange),],file = paste0(res,".txt"),quote = F,sep="\t", col.names = F)
+}
+
+
+write(rownames(res_frame[which(res_frame$change == "DOWN"),]),file="FACT_down.temp")
+write(rownames(res_frame[which(res_frame$change == "UP"),]),file="FACT_up.temp")
+
+
+write.table(counts(dds,normalized=T),file = "normalized_counts.txt",quote = F,sep="\t",col.names = T,row.names = T)
+write.table(assay(rld),file = "rlog.txt",quote = F,sep="\t",col.names = T,row.names = T)
+```
+
+
+```{r rlog}
+rld <- rlog(dds, blind=TRUE)
+vsd <- varianceStabilizingTransformation(dds, blind=FALSE)
+vsd.fast <- vst(dds, blind=FALSE)
+head(assay(rld), 3)
+```
+
+```{r correlation heatmap}
+
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(Sample, Time, Ploidy, sep="-")
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,clustering_distance_rows=sampleDists,clustering_distance_cols=sampleDists,col=colors)
+```
+
+
+
+```{r pca}
+#("RNA_deseq2_pca2.pdf")
+#plotPCA(rld, intgroup=c("sample", "time","ploidy"))
+data <- plotPCA(rld, intgroup=c("treated","rep"), returnData=TRUE)
+#data <- prcomp(t(dat2))
+percentVar <- round(100 * attr(data, "percentVar"))
+#datx = as.data.frame(data$x)
+ggplot(data, aes(PC1, PC2)) + geom_point(aes(color = treated,  shape = rep),size = 4) +
+    #scale_color_manual(values = c("green","red")) + 
+#    scale_shape_manual(values=c(16,1,17,2)) +
+   # scale_shape_manual(values=c(16,17)) + 
+#    scale_size_manual(values = c(2,4)) + 
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) + 
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed()
+#dev.off()
+```
+
+
+```{r MA plot}
+plotMA(res, main="DESeq2", ylim=c(-2,2))
+plotCounts(dds, gene="ATF3", intgroup="treated") #which.min(res$pvalue)
+
+```
+
+
+
+
+
+```{r merge}
+temp=list()
+for(res in names(results)){
+res_frame <- as.data.frame(results[[res]])
+#res_frame <- res_frame[which(!is.na(res_frame$padj)),]
+
+res_frame$change <- as.factor(ifelse(res_frame$padj < 0.05 & abs(res_frame$log2FoldChange) > log2(2),
+                               ifelse(res_frame$log2FoldChange > 0, "UP", "DOWN"), "NOT"))
+
+res_frame <- res_frame[,c("log2FoldChange","padj","change")]
+names(res_frame) <- paste0(res,"_",names(res_frame))
+
+
+temp[[res]] = res_frame
+
+}
+
+res_merge <- merge(temp$res1,temp$res2,by=0)
+res_merge <- merge(res_merge,temp$res3,by.x=1,by.y=0)
+
+###FC1>FC2>FC3>0,expression turn down constantly
+constant_down <- res_merge[which((res_merge$res1_log2FoldChange > res_merge$res2_log2FoldChange) &
+                           (res_merge$res2_log2FoldChange > res_merge$res3_log2FoldChange) &
+                           (res_merge$res3_log2FoldChange >= 0) &
+                           (res_merge$res1_change == "UP") &
+                           (res_merge$res2_change == "UP")
+                         ),]
+# head(constant_down[order(constant_down$res1_log2FoldChange,decreasing = T),])
+#write.table(constant_down,"constantly_down2.txt",row.names = F,col.names = T,quote = F,sep = "\t")
+
+length(rownames(constant_down[constant_down$res3_change=="NOT",]))
+length(rownames(constant_down[constant_down$res3_change=="UP",]))
+
+
+###FC1<FC2<FC3<0,expression turn up constantly
+constant_up <- res_merge[which((res_merge$res1_log2FoldChange < res_merge$res2_log2FoldChange) &
+                           (res_merge$res2_log2FoldChange < res_merge$res3_log2FoldChange) &
+                           (res_merge$res3_log2FoldChange <= 0) &
+                           (res_merge$res1_change == "DOWN") &
+                           (res_merge$res2_change == "DOWN")
+                         ),]
+# head(constant_up[order(constant_up$res1_log2FoldChange,decreasing = F),])
+#write.table(constant_up,"constantly_up2.txt",row.names = F,col.names = T,quote = F,sep = "\t")
+
+length(rownames(constant_up[constant_up$res3_change=="NOT",]))
+length(rownames(constant_up[constant_up$res3_change=="DOWN",]))
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

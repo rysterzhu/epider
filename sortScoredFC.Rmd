@@ -1,0 +1,93 @@
+---
+title: "sortScoredFC"
+author: "zhu"
+date: "2017年5月3日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+save.image("sortScoredFC.RData")
+load("sortScoredFC.RData")
+```
+
+
+```{r}
+constant_down2 <- constant_down
+constant_down2$score <- constant_down2$res1_log2FoldChange - 2*constant_down2$res3_log2FoldChange
+constant_down2 <- constant_down2[order(constant_down2$score,decreasing = T),]
+
+
+constant_up2 <- constant_up
+constant_up2$score <- constant_up2$res1_log2FoldChange - 2*constant_up2$res3_log2FoldChange
+constant_up2 <- constant_up2[order(constant_up2$score,decreasing = F),]
+
+write.table(constant_down2,file = "constant_down2_sortScoredFC.txt",quote = F,sep="\t",col.names = T,row.names = F)
+write.table(constant_up2,file = "constant_up2_sortScoredFC.txt",quote = F,sep="\t",col.names = T,row.names = F)
+```
+
+```{r}
+select <- constant_down2[which(constant_down2$score > 4),1]
+data <- assay(rld)[select,]
+data2 <- data.frame("0d"=rowMeans(data[,colData(dds)$treated=="case1"]),
+                   "90d"=rowMeans(data[,colData(dds)$treated=="case2"]),
+                    "120d"=rowMeans(data[,colData(dds)$treated=="case3"]),
+                    control=rowMeans(data[,colData(dds)$treated=="control"]),check.names = F
+                    )
+
+pheatmap(data2, cluster_rows=T, show_rownames=T,cluster_cols=F,cellwidth = 20,cellheight = 10,filename = "sortScoredFC_down1.pdf")
+```
+
+```{r}
+select <- constant_up2[1:100,1]
+data <- assay(rld)[select,]
+data2 <- data.frame("0d"=rowMeans(data[,colData(dds)$treated=="case1"]),
+                   "90d"=rowMeans(data[,colData(dds)$treated=="case2"]),
+                    "120d"=rowMeans(data[,colData(dds)$treated=="case3"]),
+                    control=rowMeans(data[,colData(dds)$treated=="control"]),check.names = F
+                    )
+
+pheatmap(data2, cluster_rows=T, show_rownames=T,cluster_cols=F,cellwidth = 20,cellheight = 10,filename = "sortScoredFC_up1.pdf")
+```
+
+
+```{r}
+select_down <- constant_down$Row.names
+data <- assay(rld)[select_down,]
+data_down <- data.frame("0d"=rowMeans(data[,colData(dds)$treated=="case1"]),
+                   "90d"=rowMeans(data[,colData(dds)$treated=="case2"]),
+                    "120d"=rowMeans(data[,colData(dds)$treated=="case3"]),
+                    control=rowMeans(data[,colData(dds)$treated=="control"]),check.names = F
+                    )
+
+
+data_down$std <- apply(data_down,1,sd)
+data_down <- data_down[order(data_down$std,decreasing = T),]
+
+write.table(data_down,file = "expression_down_sortByStd.txt",quote = F,sep="\t",col.names = T,row.names = T)
+
+temp <- read.table("chart_KEGG_down.txt",header = F,sep = "\t",row.names = NULL)
+select <- strsplit(as.vector(temp[2,6]),split=", ")[[1]]
+
+data_pi3k <- data_down[select,]
+data_pi3k <- data_pi3k[order(data_pi3k$std,decreasing = T),]
+write.table(data_pi3k,file = "expression_pi3k_sortByStd.txt",quote = F,sep="\t",col.names = T,row.names = T)
+###########
+select_up <- constant_up$Row.names
+data <- assay(rld)[select_up,]
+data_up <- data.frame("0d"=rowMeans(data[,colData(dds)$treated=="case1"]),
+                   "90d"=rowMeans(data[,colData(dds)$treated=="case2"]),
+                    "120d"=rowMeans(data[,colData(dds)$treated=="case3"]),
+                    control=rowMeans(data[,colData(dds)$treated=="control"]),check.names = F
+                    )
+
+
+data_up$std <- apply(data_up,1,sd)
+data_up <- data_up[order(data_up$std,decreasing = T),]
+
+write.table(data_up,file = "expression_up_sortByStd.txt",quote = F,sep="\t",col.names = T,row.names = T)
+
+
+
+```
+

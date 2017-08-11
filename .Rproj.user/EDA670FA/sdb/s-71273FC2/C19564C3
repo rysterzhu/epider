@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"DESeq2_plots\"\noutput: html_notebook\n\n---\n```{r}\nlibrary(ggplot2)\nsetwd(\"~/R/epider\")\nload(\".RData\")\n```\n\n\n```{r constantly plot}\n#\n\n#constant_up <- read.table(\"constantly_up.txt\",header = T,sep = \"\\t\")\n\ntest <- rbind(constant_up[which(constant_up$res3_change==\"NOT\"),c(1,2,5,8)],constant_down[which(constant_down$res3_change==\"NOT\"),c(1,2,5,8)])\ntest1 <- melt(test)\ntest2 <- test1[order(test1$Row.names),]\ntest2$x <- rep(1:3,length(rownames(test2))/3)\n\ng = ggplot(data = test2) + geom_line(aes(x=x,y=value,group=Row.names))\n\n\nprint(g)\n\n\n```\n\n```{r heatmap for select genes}\ntemp <- read.table(\"chart_KEGG_down.txt\",header = F,sep = \"\\t\",row.names = NULL)\nselect <- strsplit(as.vector(temp[2,6]),split=\", \")[[1]]\n#temp <- temp[!duplicated(temp$V1),]\ndata <- res_merge\nrownames(data) <- data$Row.names\ndata <- data[,-1]\n\n#select <- as.vector(temp[,1])\ndata <- data[select,c(1,4,7)]\ncolnames(data) <- c(\"log2FC(0d)\",\"log2FC(90d)\",\"log2FC(120d)\")\ncolnames(data) <- c(\"0d\",\"90d\",\"120d\")\npheatmap(data, cluster_rows=T, show_rownames=T,cluster_cols=F,filename = \"PI3K_FC_heatmap.pdf\")\n\n\n```\n\n```{r gene heatmap}\n#select <- row.names(res_frame[order(res_frame$log2FoldChange),])[1:20]\n#select <- row.names(res_frame[which(res_frame$change==\"DOWN\"),])\n#select <- row.names(res_frame[which(res_frame$change==\"UP\"),])\nnt <- normTransform(dds) # defaults to log2(x+1)\nlog2.norm.counts <- assay(nt)[select,]\ndds$treated = Treated\ndf <- as.data.frame(colData(dds)[,c(\"treated\")])\npheatmap(log2.norm.counts, cluster_rows=T, show_rownames=T,cluster_cols=T)\npheatmap(assay(rld)[select,], cluster_rows=T, show_rownames=T,cluster_cols=F,filename = \"PI3K_rld_heatmap.pdf\")\n```\n\n```{r rld treated means heatmap}\n#rld <- rlog(dds, blind=TRUE)\ndata <- assay(rld)[select,]\n\ndata2 <- data.frame(\"0d\"=rowMeans(data[,colData(dds)$treated==\"case1\"]),\n                   \"90d\"=rowMeans(data[,colData(dds)$treated==\"case2\"]),\n                    \"120d\"=rowMeans(data[,colData(dds)$treated==\"case3\"]),\n                    control=rowMeans(data[,colData(dds)$treated==\"control\"]),check.names = F\n                    )\n\npheatmap(data2, cluster_rows=T, show_rownames=T,cluster_cols=F,cellwidth = 20,cellheight = 10,filename = \"PI3K_rld_heatmap_down1.pdf\")\n\n\n\n```\n\n\n\n```{r }\ntemp <- read.table(\"go_term/constantly_up_DOWN.txt\",header = F,sep = \"\\t\",row.names = NULL)\nselect1 <- strsplit(as.vector(temp[2,6]),split=\", \")[[1]]\nselect2 <- strsplit(as.vector(temp[3,6]),split=\", \")[[1]]\nselect3 <- strsplit(as.vector(temp[6,6]),split=\", \")[[1]]\nselect <- c(select1,select2,select3)\nselect <- select[!duplicated(select)]\n\n\ndata <- assay(rld)[select,]\ndata2 <- data.frame(\"0d\"=rowMeans(data[,colData(dds)$treated==\"case1\"]),\n                   \"90d\"=rowMeans(data[,colData(dds)$treated==\"case2\"]),\n                    \"120d\"=rowMeans(data[,colData(dds)$treated==\"case3\"]),\n                    control=rowMeans(data[,colData(dds)$treated==\"control\"]),check.names = F\n                    )\n\npheatmap(data2, cluster_rows=T, show_rownames=T,cluster_cols=F,cellwidth = 20,cellheight = 10,filename = \"keratinization_rld_heatmap_up1.pdf\")\n\n\n```\n\n\n\n\n```{r}\ncounts(dds,normalized = T)\n```\n\n",
+    "created" : 1493085034740.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2274347076",
+    "id" : "C19564C3",
+    "lastKnownWriteTime" : 1493804049,
+    "last_content_update" : 1493804049048,
+    "path" : "~/R/epider/DESeq2_plots.Rmd",
+    "project_path" : "DESeq2_plots.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "docOutlineVisible" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

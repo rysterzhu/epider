@@ -1,0 +1,55 @@
+---
+title: "DESeq_plot"
+author: "zhu"
+date: "2017年5月4日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r MA plot}
+plotMA(res, main="DESeq2", ylim=c(-2,2))
+plotCounts(dds, gene="MXI1", intgroup="treated") #which.min(res$pvalue)
+```
+
+```{r volcano plot}
+res_frame <- as.data.frame(res)
+res_frame <- res_frame[which(!is.na(res_frame$padj)),]
+with(res_frame, plot(log2FoldChange, -log10(padj), pch=20, main="Volcano plot"))
+res_frame$change <- as.factor(ifelse(res_frame$padj < 0.05 & abs(res_frame$log2FoldChange) > log2(1.5),
+                               ifelse(res_frame$log2FoldChange > 0, "UP", "DOWN"), "NOT"))
+
+g = ggplot(data=res_frame, aes(x=log2FoldChange, y=-log10(padj), color=change)) +
+  geom_point(alpha=0.5, size=1,na.rm = T) +
+  theme_set(theme_set(theme_bw(base_size=20)))+
+  xlab("log2 fold change") + ylab("-log10 padj-value") +
+  #ggtitle( this_tile  ) + theme(plot.title = element_text(size=15,hjust = 0.5))+
+  scale_colour_manual(values = c('darkgreen','grey','red'))  ## corresponding to the levels(res$change)
+
+spe_genes <- c("MYCN","SSRP1","SUPT16H","CHD9")
+spe_frame <- res_frame[spe_genes,]
+spe_frame$name <- as.factor(rownames(spe_frame))
+
+g2 <- g + 
+  geom_point(aes(x=log2FoldChange, y=-log10(padj)), data = spe_frame, color="yellow")+
+  geom_text(aes(x=log2FoldChange, y=-log10(padj),label=name,vjust=-1,hjust=-0.1), data = spe_frame,color="black")
+
+print(g2)
+ggsave("2.pdf",g2)
+
+```
+
+```{r}
+temp <- read.table("~/workspace/2.nmyc/Annotation/MYCN_target_signature.txt",header = F)
+target_genes <- as.vector(temp[,1])
+
+
+
+
+
+
+```
+

@@ -1,0 +1,1 @@
+"0","plotCounts(dds, gene=""SSRP1"", intgroup=""treated"") #which.min(res$pvalue)"

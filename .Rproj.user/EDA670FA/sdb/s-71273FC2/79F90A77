@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"goTermBar\"\nauthor: \"zhu\"\ndate: \"2017年5月2日\"\noutput: html_document\n---\n\n```{r setup, include=FALSE}\nknitr::opts_chunk$set(echo = TRUE)\nlibrary(ggplot2)\nlibrary(reshape2)\n```\n\n```{r}\nraw <- read.table(\"constantly_up_DOWN.txt\",sep = \"\\t\",header = T)\n\ndata <- raw[1:8,c(\"Term\",\"PValue\")]\ndata$PValue <- -log10(data$PValue)\nrownames(data) <- data$Term\n\n# test <- melt(data)\n\ng = ggplot(data) \n\n\ng2 = (g+ geom_bar(aes(x=reorder(Term,PValue),weight=PValue),fill=\"darkolivegreen3\",position = position_stack(reverse = F),width = 0.4,show.legend = F) \n      + coord_flip() + xlab(\"\") + ylab(\"-lg(pvalue)\") + theme_bw() + labs(title = \"Constantly Upregulated genes Enriched Biological Process\")+\n        theme(panel.grid.major =element_blank(), \n              panel.grid.minor = element_blank(),\n              panel.background = element_blank(),\n              #plot.title = element_text(hjust = 4),\n              axis.text.y = element_text(colour = \"black\",size = 10),\n              plot.margin = margin(10,10,5,5)\n              ) \n      + scale_y_continuous(limits = c(0,10),expand=c(0,0))\n      #+ guides(fill = F) \n    )\nprint(g2)\nggsave(\"BP_up1.pdf\",g2,width = 9.60,height = 4.80)\n```\n\n\n\n\n\n```{r}\nraw <- read.table(\"../chart_KEGG_down.txt\",sep = \"\\t\",header = T)\n\ndata <- raw[1:9,c(\"Term\",\"PValue\")]\ndata$PValue <- -log10(data$PValue)\nrownames(data) <- data$Term\n\ng2 = (ggplot(data) \n  +\tgeom_bar(aes(x=reorder(Term,PValue),weight=PValue),  #将term按pvalue排序；bar的高度为term*weight\n\tfill=\"OliveDrab3\",  \t\t\t\t\t\t\t#bar填充的颜色\n\tposition = position_stack(reverse = F),\t    \t\t#未知\n\twidth = 0.4,\t\t\t\t\t\t\t\t\t\t#bar的宽度\n\tshow.legend = F)\t\t\t\t\t\t\t\t\t#不显示legend\n  + coord_flip() \t\t\t\t\t\t\t\t\t\t#倒置坐标轴\n\t+ xlab(\"\") + ylab(\"-lg(pvalue)\") \t\t\t\t\t#x,y坐标轴标题\n\t+ theme_bw() \t\t\t\t\t\t\t\t\t\t#空白主题\n\t+ labs(title = \"Constantly Downregulated Genes Enriched KEGG Pathway\")   #图标题\n\t+ theme(panel.grid.major =element_blank(), \t\t\t\t\t\t\n              panel.grid.minor = element_blank(),\n              panel.background = element_blank(),\t\t\t\t\t\t#空白背景\n              #plot.title = element_text(hjust = 4),\t\t\t\t\t#调整标题位置\n              axis.text.y = element_text(colour = \"black\",size = 10),\t#y轴文字颜色大小\n              plot.margin = margin(10,10,5,5)\t\t\t\t\t\t\t#图与边界的空白\n              ) \n  + scale_y_continuous(limits = c(0,13),expand=c(0,0))\t\t\t\t#y轴范围；与x轴的留白为0\n      #+ guides(fill = F) \n    )\nprint(g2)\nggsave(\"KEGG_down1.pdf\",g2,width = 9.60,height = 4.80)\n```\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "created" : 1493722681821.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "61830843",
+    "id" : "79F90A77",
+    "lastKnownWriteTime" : 1493783971,
+    "last_content_update" : 1493783971615,
+    "path" : "~/R/epider/go_term/goTermBar.Rmd",
+    "project_path" : "go_term/goTermBar.Rmd",
+    "properties" : {
+        "last_setup_crc32" : "",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

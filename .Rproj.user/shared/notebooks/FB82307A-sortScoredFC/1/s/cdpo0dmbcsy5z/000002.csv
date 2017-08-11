@@ -1,0 +1,6 @@
+"0","constant_down2 <- constant_down"
+"0","constant_down2$score <- constant_down2$res1_log2FoldChange - 2*constant_down2$res3_log2FoldChange"
+"0","constant_down2 <- constant_down2[order(constant_down2$score,decreasing = T),]"
+"0","constant_up2 <- constant_up"
+"0","constant_up2$score <- constant_up2$res1_log2FoldChange - 2*constant_up2$res3_log2FoldChange"
+"0","constant_up2 <- constant_up2[order(constant_up2$score,decreasing = F),]"

@@ -1,0 +1,91 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+
+library(DESeq2)
+
+load("stem.RData")
+#save.image("stem.RData")
+```
+
+
+```{r}
+directory <- "/home/qszhu/workspace/3.epidermal/3.DESeq2/1.htseq"
+sampleFiles <- grep("^.*.txt",list.files(directory),value=TRUE)
+
+sampleCondition <- sub(".txt","",sampleFiles)
+print(sampleCondition)
+Treated <- factor(substr(sampleCondition,1,1),labels = c("case1","case2","case3","control"))
+Rep = factor(substr(sampleCondition,2,2),labels = c("rep1","rep2","rep3"))
+sampleCondition = paste0(Treated,"_",Rep)
+#Sample = factor(substr(sampleCondition,1,1),labels = c("MYCN","FACT"))
+
+sampleTable <- data.frame(sampleName = sampleCondition,fileName = sampleFiles,treated = Treated, rep = Rep,time=factor())
+ddsHTSeq <- DESeqDataSetFromHTSeqCount(sampleTable = sampleTable,directory = directory,design= ~ treated + rep)
+
+print(sampleCondition)
+```
+
+
+```{r}
+dds <- DESeq(ddsHTSeq)
+
+colData(dds)
+results <- list(
+res1 = results(dds,contrast = c("treated","case2","case1")),
+res2 = results(dds,contrast = c("treated","case3","case1")),
+res3 = results(dds,contrast = c("treated","control","case1")))
+```
+
+
+
+```{r count DE number}
+for(res in results){
+print(length(which(res$log2FoldChange < -log2(2) & res$padj < 0.01)))
+print(length(which(res$log2FoldChange > log2(2) & res$padj < 0.01)))
+}
+
+
+# length(which(res$log2FoldChange < -log2(1.5) & res$pvalue < 0.05))
+# length(which(res$log2FoldChange > log2(1.5) & res$pvalue < 0.05))
+# length(which(res$log2FoldChange < -log2(1.5) & res$padj < 0.05))
+# length(which(res$log2FoldChange > log2(1.5) & res$padj < 0.05))
+# length(which(res$log2FoldChange < -log2(1.5) & res$padj < 0.1))
+# length(which(res$log2FoldChange > log2(1.5) & res$padj < 0.1))
+# length(which(res$padj < 0.1))
+# length(which(res$padj < 0.1))
+# length(which(res$padj > 0.05))
+res_frames = list()
+for(res in names(results)){
+res_frame <- as.data.frame(results[[res]])
+#res_frame <- res_frame[which(!is.na(res_frame$padj)),]
+
+res_frame$change <- as.factor(ifelse(res_frame$padj < 0.05 & abs(res_frame$log2FoldChange) > log2(2),
+                               ifelse(res_frame$log2FoldChange > 0, "UP", "DOWN"), "NOT"))
+res_frames[[res]] = res_frame
+}
+
+```
+
+```{r}
+cas2 <- as.data.frame(results$res1)[,c(2,6)]
+cas3 <- as.data.frame(results$res2)[,c(2,6)]
+cas4 <- as.data.frame(results$res3)[,c(2,6)]
+
+res_merge <- merge(as.data.frame(results$res1)[,c(2,6)],as.data.frame(results$res2)[,c(2,6)],by=0)
+res_merge <- merge(res_merge,as.data.frame(results$res3)[,c(2,6)],by.x=1,by.y=0)
+res_merge <- res_merge[,c(1,2,4,6)]
+
+res_merge[is.na(res_merge)] <-  0.0
+
+colnames(res_merge) <- c("Gene","90d","120d","epider")
+
+write.table(res_merge,"stem_log2FC.txt",sep="\t",quote = F, row.names = F,col.names = T)
+```
+
+

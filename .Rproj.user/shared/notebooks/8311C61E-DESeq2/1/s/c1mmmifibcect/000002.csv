@@ -1,0 +1,4 @@
+"0","results <- list("
+"0","res1 = results(dds,contrast = c(""treated"",""case1"",""case2"")),"
+"0","res2 = results(dds,contrast = c(""treated"",""case2"",""case3"")),"
+"0","res3 = results(dds,contrast = c(""treated"",""case3"",""control"")))"

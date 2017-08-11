@@ -1,0 +1,4 @@
+"0","as.data.frame(rld)
+"
+"2","Error in as.vector(x) : no method for coercing this S4 class to a vector
+"

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"sortScoredFC\"\nauthor: \"zhu\"\ndate: \"2017年5月3日\"\noutput: html_document\n---\n\n```{r setup, include=FALSE}\nknitr::opts_chunk$set(echo = TRUE)\nsave.image(\"sortScoredFC.RData\")\nload(\"sortScoredFC.RData\")\n```\n\n\n```{r}\nconstant_down2 <- constant_down\nconstant_down2$score <- constant_down2$res1_log2FoldChange - 2*constant_down2$res3_log2FoldChange\nconstant_down2 <- constant_down2[order(constant_down2$score,decreasing = T),]\n\n\nconstant_up2 <- constant_up\nconstant_up2$score <- constant_up2$res1_log2FoldChange - 2*constant_up2$res3_log2FoldChange\nconstant_up2 <- constant_up2[order(constant_up2$score,decreasing = F),]\n\nwrite.table(constant_down2,file = \"constant_down2_sortScoredFC.txt\",quote = F,sep=\"\\t\",col.names = T,row.names = F)\nwrite.table(constant_up2,file = \"constant_up2_sortScoredFC.txt\",quote = F,sep=\"\\t\",col.names = T,row.names = F)\n```\n\n```{r}\nselect <- constant_down2[which(constant_down2$score > 4),1]\ndata <- assay(rld)[select,]\ndata2 <- data.frame(\"0d\"=rowMeans(data[,colData(dds)$treated==\"case1\"]),\n                   \"90d\"=rowMeans(data[,colData(dds)$treated==\"case2\"]),\n                    \"120d\"=rowMeans(data[,colData(dds)$treated==\"case3\"]),\n                    control=rowMeans(data[,colData(dds)$treated==\"control\"]),check.names = F\n                    )\n\npheatmap(data2, cluster_rows=T, show_rownames=T,cluster_cols=F,cellwidth = 20,cellheight = 10,filename = \"sortScoredFC_down1.pdf\")\n```\n\n```{r}\nselect <- constant_up2[1:100,1]\ndata <- assay(rld)[select,]\ndata2 <- data.frame(\"0d\"=rowMeans(data[,colData(dds)$treated==\"case1\"]),\n                   \"90d\"=rowMeans(data[,colData(dds)$treated==\"case2\"]),\n                    \"120d\"=rowMeans(data[,colData(dds)$treated==\"case3\"]),\n                    control=rowMeans(data[,colData(dds)$treated==\"control\"]),check.names = F\n                    )\n\npheatmap(data2, cluster_rows=T, show_rownames=T,cluster_cols=F,cellwidth = 20,cellheight = 10,filename = \"sortScoredFC_up1.pdf\")\n```\n\n\n```{r}\nselect_down <- constant_down$Row.names\ndata <- assay(rld)[select_down,]\ndata_down <- data.frame(\"0d\"=rowMeans(data[,colData(dds)$treated==\"case1\"]),\n                   \"90d\"=rowMeans(data[,colData(dds)$treated==\"case2\"]),\n                    \"120d\"=rowMeans(data[,colData(dds)$treated==\"case3\"]),\n                    control=rowMeans(data[,colData(dds)$treated==\"control\"]),check.names = F\n                    )\n\n\ndata_down$std <- apply(data_down,1,sd)\ndata_down <- data_down[order(data_down$std,decreasing = T),]\n\nwrite.table(data_down,file = \"expression_down_sortByStd.txt\",quote = F,sep=\"\\t\",col.names = T,row.names = T)\n\ntemp <- read.table(\"chart_KEGG_down.txt\",header = F,sep = \"\\t\",row.names = NULL)\nselect <- strsplit(as.vector(temp[2,6]),split=\", \")[[1]]\n\ndata_pi3k <- data_down[select,]\ndata_pi3k <- data_pi3k[order(data_pi3k$std,decreasing = T),]\nwrite.table(data_pi3k,file = \"expression_pi3k_sortByStd.txt\",quote = F,sep=\"\\t\",col.names = T,row.names = T)\n###########\nselect_up <- constant_up$Row.names\ndata <- assay(rld)[select_up,]\ndata_up <- data.frame(\"0d\"=rowMeans(data[,colData(dds)$treated==\"case1\"]),\n                   \"90d\"=rowMeans(data[,colData(dds)$treated==\"case2\"]),\n                    \"120d\"=rowMeans(data[,colData(dds)$treated==\"case3\"]),\n                    control=rowMeans(data[,colData(dds)$treated==\"control\"]),check.names = F\n                    )\n\n\ndata_up$std <- apply(data_up,1,sd)\ndata_up <- data_up[order(data_up$std,decreasing = T),]\n\nwrite.table(data_up,file = \"expression_up_sortByStd.txt\",quote = F,sep=\"\\t\",col.names = T,row.names = T)\n\n\n\n```\n\n",
+    "created" : 1493789400799.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "321742804",
+    "id" : "324BEAB8",
+    "lastKnownWriteTime" : 1493804050,
+    "last_content_update" : 1493804050032,
+    "path" : "~/R/epider/sortScoredFC.Rmd",
+    "project_path" : "sortScoredFC.Rmd",
+    "properties" : {
+        "last_setup_crc32" : "",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

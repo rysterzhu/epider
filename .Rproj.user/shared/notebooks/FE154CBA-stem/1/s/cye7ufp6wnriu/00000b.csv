@@ -1,0 +1,5 @@
+"0","res_merge[which(is.na(res_merge))] <-  0.0
+"
+"2","Error in `[<-.data.frame`(`*tmp*`, which(is.na(res_merge)), value = 0) : 
+  new columns would leave holes after existing columns
+"
